@@ -4,7 +4,16 @@ Created on Mon Dec 28 16:51:29 2020
 
 @author: Billy
 """
+import random
+import datetime
+import dateutil.relativedelta
 import sqlite3
+
+def get_random_date(start, end):
+    delta = end - start
+    days_delta = random.randrange(delta.days)
+    return start + datetime.timedelta(days=days_delta)
+
 conn = sqlite3.connect('grafeio.sqlite3')
 c = conn.cursor()
 
@@ -15,7 +24,7 @@ c.execute('''CREATE TABLE IF NOT EXISTS ENDIAFEROMENOS(
 	onoma VARCHAR,
 	eponymo VARCHAR,
 	hlikia INTEGER,
-	fyllo VARCHAR,
+	fylo VARCHAR,
 	email VARCHAR UNIQUE,
 	topos_katoikias VARCHAR,
 	dieyuynsh_katoikias VARCHAR,
@@ -45,7 +54,7 @@ c.execute('''CREATE TABLE IF NOT EXISTS ERGODOTHS(
 	kod_ergodoth INTEGER PRIMARY KEY,
 	onoma VARCHAR,
 	eponymo VARCHAR,
-	fyllo VARCHAR,
+	fylo VARCHAR,
 	email VARCHAR,
 	dieyuynsh VARCHAR,
 	CHECK(fyllo IN('M','F','O'))
@@ -180,6 +189,11 @@ c.execute('''CREATE TABLE IF NOT EXISTS THLEFWNO_ERGODOTH (
 
 
 ### insert people into tables
+c.execute('DELETE FROM AFORA;')
+c.execute('DELETE FROM DIATHETEI;')
+c.execute('DELETE FROM PROIPIRESIA;')
+c.execute('DELETE FROM AITHSH_ERGASIAS;')
+c.execute('DELETE FROM TOMEAS_ERGASIAS;')
 c.execute('DELETE FROM ENDIAFEROMENOS;')
 c.execute('DELETE FROM ERGODOTHS;')
 
@@ -190,69 +204,96 @@ female_last_names = open('female-last-names-list.txt',encoding="utf8").read().sp
 emails = open('email-list.txt',encoding="utf8").read().splitlines()
 nomoi = open('nomoi-list.txt',encoding="utf8").read().splitlines()
 addresses = open('addresses-list.txt',encoding="utf8").read().splitlines()
+companies = open('Companies.txt',encoding="utf8").read().splitlines()
+degrees = open('Degrees.txt',encoding="utf8").read().splitlines()
+job_departments = open('Job_Departments.txt',encoding="utf8").read().splitlines()
+job_titles = open('Job_Titles.txt',encoding="utf8").read().splitlines()
+universities = open('Universities.txt',encoding="utf8").read().splitlines()
 
+for department in job_departments:
+    c.execute('''INSERT INTO TOMEAS_ERGASIAS
+    VALUES (?,NULL)''',(department,))
 
-for i in range(35):
-    myname = random.choice(male_names)
-    mylastname = random.choice(male_last_names)
+for i in range(100):
+    sex = random.choice(['M','F'])
+    if sex == 'M':
+        myname = random.choice(male_names)
+        mylastname = random.choice(male_last_names)  
+    else:
+        myname = random.choice(female_names)
+        mylastname = random.choice(female_last_names)
     age = random.randint(18,65)
     myemail = random.choice(emails)
     mynomos = random.choice(nomoi)
     myaddress = random.choice(addresses)
-
-    male_names.remove(myname)
-    male_last_names.remove(mylastname)
+      
     emails.remove(myemail)
-    addresses.remove(myaddress)
-
     c.execute('''INSERT INTO ENDIAFEROMENOS
-    VALUES (?,?,?,?,?,?,?,?)''',(i+1,myname,mylastname,age,'M',myemail,mynomos,myaddress))
-
-for i in range(35):
-    myname = random.choice(female_names)
-    mylastname = random.choice(female_last_names)
-    age = random.randint(18,65)
-    myemail = random.choice(emails)
-    mynomos = random.choice(nomoi)
-    myaddress = random.choice(addresses)
-
-    female_names.remove(myname)
-    female_last_names.remove(mylastname)
-    emails.remove(myemail)
-    addresses.remove(myaddress)
-
-    c.execute('''INSERT INTO ENDIAFEROMENOS
-    VALUES (?,?,?,?,?,?,?,?)''',(i+36,myname,mylastname,age,'F',myemail,mynomos,myaddress))
-
-
-for i in range(15):
-    myname = random.choice(male_names)
-    mylastname = random.choice(male_last_names)
-    myemail = random.choice(emails)
-    myaddress = random.choice(addresses)
-
-    male_names.remove(myname)
-    male_last_names.remove(mylastname)
-    emails.remove(myemail)
-    addresses.remove(myaddress)
+    VALUES (?,?,?,?,?,?,?,?)''',(i+1, myname, mylastname, age, sex, myemail, mynomos, myaddress))
     
-    c.execute('''INSERT INTO ERGODOTHS
-    VALUES (?,?,?,?,?,?)''',(i+1,myname,mylastname,'M',myemail,myaddress))
+    for _ in range(random.choice([1,1,1,1,1,1,1,2])):
+        nomos = random.choice(nomoi)
+        start_date = get_random_date(datetime.date(2020,1,1), datetime.date(2020,12,31))
+        end_date = start_date + dateutil.relativedelta.relativedelta(years=+1)
+        c.execute('''INSERT INTO AITHSH_ERGASIAS
+        VALUES (NULL,?,?,?,?)''',(nomos, start_date, end_date, i+1))
+        
+        #add to afora
+        departments_copy = job_departments.copy()
+        for _ in range(random.randint(1,3)):
+            department = random.choice(departments_copy)
+            departments_copy.remove(department)
+            c.execute('''INSERT INTO AFORA
+            VALUES ((SELECT MAX(kod_aithshs)
+            FROM AITHSH_ERGASIAS),?)''',(department,))
+            
+        #add to proipiresia
+        job_copy = job_titles.copy()
+        many = random.randint(0,3)
+        if age < 20:
+            many = 0
+        if age < 22 and many > 1:
+            many = 1
+        for j in range(many):
+            company = random.choice(companies)
+            job = random.choice(job_copy)
+            job_copy.remove(job)
+            delta = datetime.date(2018,12,31) - datetime.date(2020-age+18,1,1)
+            days = round(delta.days/many)
+            start_date = get_random_date(datetime.date(2020-age+18,1,1)+j*dateutil.relativedelta.relativedelta(days=+days), datetime.date(2020-age+18,1,1)+(j+1)*dateutil.relativedelta.relativedelta(days=+days))
+            week = random.randint(5, (age-18)*54/many)
+            end_date = start_date + dateutil.relativedelta.relativedelta(weeks=+week)
+            department = random.choice(job_departments)
+            c.execute('''INSERT INTO PROIPIRESIA
+            VALUES (NULL,?,?,?,?,?)''',(company, job, start_date, end_date, department))
+            
+            #add to diathetei
+            c.execute('''INSERT INTO DIATHETEI
+            VALUES ((SELECT MAX(kod_aithshs)
+            FROM AITHSH_ERGASIAS),(SELECT MAX(kod_proipiresias)
+            FROM PROIPIRESIA))''')
+    
+    
 
-for i in range(15):
-    myname = random.choice(female_names)
-    mylastname = random.choice(female_last_names)
+
+for i in range(20):
+    sex = random.choice(['M','F'])
+    if sex == 'M':
+        myname = random.choice(male_names)
+        mylastname = random.choice(male_last_names)  
+    else:
+        myname = random.choice(female_names)
+        mylastname = random.choice(female_last_names)
     myemail = random.choice(emails)
     myaddress = random.choice(addresses)
-
-    female_names.remove(myname)
-    female_last_names.remove(mylastname)
+      
     emails.remove(myemail)
-    addresses.remove(myaddress)
-    
     c.execute('''INSERT INTO ERGODOTHS
-    VALUES (?,?,?,?,?,?)''',(i+16,myname,mylastname,'F',myemail,myaddress))
+    VALUES (NULL,?,?,?,?,?)''',(myname, mylastname, sex, myemail, myaddress))
+
 
 
 conn.commit()
 conn.close()
+
+    
