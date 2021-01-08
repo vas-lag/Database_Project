@@ -1,11 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Jan  5 21:41:29 2021
-
-@author: Billy
-"""
-
-
 import sqlite3
 import tabulate as tab
 from datetime import datetime
