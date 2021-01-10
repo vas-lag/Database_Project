@@ -49,9 +49,10 @@ def create_tables(cursor):
     	hlikia INTEGER,
     	fylo VARCHAR,
     	email VARCHAR UNIQUE,
+        afm VARCHAR UNIQUE,
     	topos_katoikias VARCHAR,
     	dieyuynsh_katoikias VARCHAR,
-    	CHECK(fylo IN('M','F','O'))
+    	CHECK(fylo IN('M','F'))
     );
               ''')
                          
@@ -78,8 +79,9 @@ def create_tables(cursor):
     	eponymo VARCHAR,
     	fylo VARCHAR,
     	email VARCHAR,
+        afm VARCHAR UNIQUE,
     	dieyuynsh VARCHAR,
-    	CHECK(fylo IN('M','F','O'))
+    	CHECK(fylo IN('M','F'))
     );
               ''')
               
@@ -138,19 +140,19 @@ def create_tables(cursor):
     
     cursor.execute('''CREATE TABLE IF NOT EXISTS AFORA (
         aithsh INTEGER,
-        tomeas_ergasias VARCHAR,
-    	PRIMARY KEY(aithsh, tomeas_ergasias),
+        tomeas VARCHAR,
+    	PRIMARY KEY(aithsh, tomeas),
     	FOREIGN KEY(aithsh) REFERENCES AITHSH_ERGASIAS(kod_aithshs) ON DELETE CASCADE,
-    	FOREIGN KEY(tomeas_ergasias) REFERENCES TOMEAS_ERGASIAS(onoma)
+    	FOREIGN KEY(tomeas) REFERENCES TOMEAS_ERGASIAS(onoma)
     )WITHOUT ROWID;
               ''')
     
     cursor.execute('''CREATE TABLE IF NOT EXISTS DIATHETEI (
         aithsh INTEGER,
-        proipiresia INTEGER,
-    	PRIMARY KEY(aithsh, proipiresia),
+        kod_proipiresias INTEGER,
+    	PRIMARY KEY(aithsh, kod_proipiresias),
     	FOREIGN KEY(aithsh) REFERENCES AITHSH_ERGASIAS(kod_aithshs) ON DELETE CASCADE,
-    	FOREIGN KEY(proipiresia) REFERENCES PROIPIRESIA(kod_proipiresias)
+    	FOREIGN KEY(kod_proipiresias) REFERENCES PROIPIRESIA(kod_proipiresias)
     )WITHOUT ROWID;
               ''')
     
@@ -164,30 +166,30 @@ def create_tables(cursor):
               ''')
     
     cursor.execute('''CREATE TABLE IF NOT EXISTS ANHKEI (
-        thesi_ergasias INTEGER,
-        tomeas_ergasias VARCHAR,
-    	PRIMARY KEY(thesi_ergasias,tomeas_ergasias),
-    	FOREIGN KEY(thesi_ergasias) REFERENCES THESI_ERGASIAS(kod_theshs) ON DELETE CASCADE,
-    	FOREIGN KEY(tomeas_ergasias) REFERENCES TOMEAS_ERGASIAS(onoma)
+        kod_ergasias INTEGER,
+        tomeas VARCHAR,
+    	PRIMARY KEY(kod_ergasias,tomeas),
+    	FOREIGN KEY(kod_ergasias) REFERENCES THESI_ERGASIAS(kod_theshs) ON DELETE CASCADE,
+    	FOREIGN KEY(tomeas) REFERENCES TOMEAS_ERGASIAS(onoma)
     )WITHOUT ROWID;
               ''')       
               
     cursor.execute('''CREATE TABLE IF NOT EXISTS PROYPOTHETEI (
-        thesi_ergasias INTEGER,
-        proipiresia INTEGER,
+        kod_ergasias INTEGER,
+        kod_proipiresias INTEGER,
         aparaithth INTEGER DEFAULT 10,
-    	PRIMARY KEY(thesi_ergasias,proipiresia),
-    	FOREIGN KEY(thesi_ergasias) REFERENCES THESI_ERGASIAS(kod_theshs) ON DELETE CASCADE,
-    	FOREIGN KEY(proipiresia) REFERENCES PROIPIRESIA(kod_proipiresias)
+    	PRIMARY KEY(kod_ergasias,kod_proipiresias),
+    	FOREIGN KEY(kod_ergasias) REFERENCES THESI_ERGASIAS(kod_theshs) ON DELETE CASCADE,
+    	FOREIGN KEY(kod_proipiresias) REFERENCES PROIPIRESIA(kod_proipiresias)
     )WITHOUT ROWID;
               ''')  
               
     cursor.execute('''CREATE TABLE IF NOT EXISTS APAITEI (
-        thesi_ergasias INTEGER,
+        kod_ergasias INTEGER,
         proson INTEGER,
         shmantikothta INTEGER,
-    	PRIMARY KEY(thesi_ergasias,proson),
-    	FOREIGN KEY(thesi_ergasias) REFERENCES THESI_ERGASIAS(kod_theshs) ON DELETE CASCADE,
+    	PRIMARY KEY(kod_ergasias,proson),
+    	FOREIGN KEY(kod_ergasias) REFERENCES THESI_ERGASIAS(kod_theshs) ON DELETE CASCADE,
     	FOREIGN KEY(proson) REFERENCES PROSONTA(kod_prosontos)
     )WITHOUT ROWID;
               ''')  
@@ -214,7 +216,7 @@ def create_tables(cursor):
 
 
 
-conn, c = connect_to_db('grafeio')
+conn, c = connect_to_db('test')
 create_tables(c)
 delete_all_data(c)
 
@@ -240,7 +242,7 @@ for department in job_departments:
     c.execute('''INSERT INTO TOMEAS_ERGASIAS
     VALUES (?,NULL)''',(department,))
 
-for i in range(100):
+for i in range(200):
     sex = random.choice(['M','F'])
     if sex == 'M':
         myname = random.choice(male_names)
@@ -250,17 +252,19 @@ for i in range(100):
         mylastname = random.choice(female_last_names)
     age = random.randint(18,65)
     myemail = random.choice(emails)
+    #print(myemail)
     mynomos = random.choice(nomoi)
     myaddress = random.choice(addresses)
     emails.remove(myemail)
+    myafm = random.randint(100000000,999999999)
     c.execute('''INSERT INTO ENDIAFEROMENOS
-    VALUES (?,?,?,?,?,?,?,?)''',(i+1, myname, mylastname, age, sex, myemail, mynomos, myaddress))
+    VALUES (?,?,?,?,?,?,?,?,?)''',(i+1, myname, mylastname, age, sex, myemail, myafm, mynomos, myaddress))
     
     for _ in range(random.randint(1,2)):
         c.execute('''INSERT INTO THLEFWNO_ENDIAFEROMENOU
         VALUES (?,?)''', (i+1, str(69) + str(random.randint(10000000,99999999))))
     
-    for _ in range(random.choice([1,1,1,1,1,1,1,2])):
+    for _ in range(random.choice([1])):
         nomos = random.choice(nomoi)
         start_date = get_random_date(datetime.date(2020,1,1), datetime.date(2020,12,31))
         end_date = start_date + dateutil.relativedelta.relativedelta(years=+1)
@@ -269,7 +273,7 @@ for i in range(100):
         
         #add to afora
         departments_copy = job_departments.copy()
-        for _ in range(random.randint(1,3)):
+        for _ in range(random.randint(1,4)):
             department = random.choice(departments_copy)
             departments_copy.remove(department)
             c.execute('''INSERT INTO AFORA
@@ -339,7 +343,7 @@ for i in range(100):
     
 
 
-for i in range(20):
+for i in range(30):
     sex = random.choice(['M','F'])
     if sex == 'M':
         myname = random.choice(male_names)
@@ -349,16 +353,17 @@ for i in range(20):
         mylastname = random.choice(female_last_names)
     myemail = random.choice(emails)
     myaddress = random.choice(addresses)
-      
+    myafm = random.randint(100000000,999999999)
+    
     emails.remove(myemail)
     c.execute('''INSERT INTO ERGODOTHS
-    VALUES (NULL,?,?,?,?,?)''',(myname, mylastname, sex, myemail, myaddress))
+    VALUES (NULL,?,?,?,?,?,?)''',(myname, mylastname, sex, myemail, myafm, myaddress))
     
     for _ in range(random.randint(1,2)):
         c.execute('''INSERT INTO THLEFWNO_ERGODOTH
         VALUES (?,?)''', (i+1, str(69) + str(random.randint(10000000,99999999))))
         
-    for _ in range(random.randint(1,8)):
+    for _ in range(random.randint(1,10)):
         company = random.choice(companies)
         nomos = random.choice(nomoi)
         start_date = get_random_date(datetime.date(2020,1,1), datetime.date(2020,12,31))
@@ -372,21 +377,23 @@ for i in range(20):
         c.execute('''INSERT INTO ANHKEI
         VALUES ((SELECT MAX(kod_theshs)
         FROM THESI_ERGASIAS),?)''',(department,))
+         
+        choice = random.choice([0,1])
+        if choice == 1:
+            #add to proipiresia
+            duration = random.randint(1,5)
+            department = random.choice(job_departments)
+            c.execute('''INSERT INTO PROIPIRESIA
+            VALUES (NULL,NULL,NULL,NULL,NULL,?,?)''',(duration, department))
             
-        #add to proipiresia
-        duration = random.randint(1,5)
-        department = random.choice(job_departments)
-        c.execute('''INSERT INTO PROIPIRESIA
-        VALUES (NULL,NULL,NULL,NULL,NULL,?,?)''',(duration, department))
-        
-        #add to proypothetei
-        c.execute('''INSERT INTO PROYPOTHETEI
-        VALUES ((SELECT MAX(kod_theshs)
-        FROM THESI_ERGASIAS),(SELECT MAX(kod_proipiresias)
-        FROM PROIPIRESIA),?)''',(1,))
+            #add to proypothetei
+            c.execute('''INSERT INTO PROYPOTHETEI
+            VALUES ((SELECT MAX(kod_theshs)
+            FROM THESI_ERGASIAS),(SELECT MAX(kod_proipiresias)
+            FROM PROIPIRESIA),?)''',(1,))
                                    
         #add to prosonta
-        for j in range(random.randint(0,3)):
+        for j in range(random.choice([0,0,1,1,2])):
             c.execute('''INSERT INTO PROSONTA
             VALUES (NULL,NULL)''')
             #add to gnosh
@@ -400,7 +407,7 @@ for i in range(20):
             FROM THESI_ERGASIAS),(SELECT MAX(kod_prosontos)
             FROM PROSONTA),?)''',(random.randint(1,10),))
                                    
-        for j in range(random.randint(0,1)):
+        for j in range(random.choice([0,0,0,1,1])):
             c.execute('''INSERT INTO PROSONTA
             VALUES (NULL,NULL)''')
             #add to ptyxio
