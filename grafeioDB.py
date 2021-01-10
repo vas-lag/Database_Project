@@ -319,11 +319,12 @@ for i in range(200):
             FROM AITHSH_ERGASIAS),(SELECT MAX(kod_prosontos)
             FROM PROSONTA))''')
                                    
-        for j in range(random.randint(0,2)):
+        for j in range(random.randint(0,3)):
             c.execute('''INSERT INTO PROSONTA
             VALUES (NULL,NULL)''')
             #add to ptyxio
-            uni = random.choice(universities[str(j+1)])
+            index = 1 if j == 0 else 2
+            uni = random.choice(universities[str(index)])
             degree = random.choice(degrees[uni])
             get_date = get_random_date(datetime.date(2020-age+21,1,1), datetime.date(2020-age+25,12,31))
             if j == 0:
@@ -392,7 +393,7 @@ for i in range(30):
             FROM PROIPIRESIA),?)''',(1,))
                                    
         #add to prosonta
-        for j in range(random.choice([0,0,1,1,2])):
+        for j in range(random.choice([0,0,0,1,1,2])):
             c.execute('''INSERT INTO PROSONTA
             VALUES (NULL,NULL)''')
             #add to gnosh
