@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jan  5 21:41:29 2021
 
 @author: Billy
 """
@@ -485,7 +484,7 @@ def option8(cursor):
 switch = {"1":option1, "2":option2, "3":option3, "4":option4, "5":option5, "6":option6, "7":option7, "8":option8,"9":option9,
           "11":option11, "12":option12, "13":option13, "14":option14, "15":option15}
 while(True):
-    conn, c = connect_to_db('test')
+    conn, c = connect_to_db('grafeioDB')
     c.execute('''PRAGMA foreign_keys = ON;''')
     print_info()
     choice = input("Παρακαλώ επιλέξτε μια από τις παραπάνω επιλογές (1-9) η πατήστε q για έξοδο: ")

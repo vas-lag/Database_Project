@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Dec 28 16:51:29 2020
 
 @author: Billy
 """
@@ -216,7 +215,7 @@ def create_tables(cursor):
 
 
 
-conn, c = connect_to_db('test')
+conn, c = connect_to_db('grafeioDB')
 create_tables(c)
 delete_all_data(c)
 
